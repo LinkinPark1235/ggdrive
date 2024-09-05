@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Folder</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        function authenticate() {
+            return gapi.auth2.getAuthInstance()
+                .signIn({scope: "https://www.googleapis.com/auth/drive.metadata.readonly"})
+                .then(function() { console.log("Sign-in successful"); },
+                      function(err) { console.error("Error signing in", err); });
+        }
+        function loadClient() {
+            gapi.client.setApiKey("AIzaSyBcY_VcogCfEq1LPACd37XovEvTgWwKUo8");
+            return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest")
+                .then(function() { console.log("GAPI client loaded for API"); },
+                      function(err) { console.error("Error loading GAPI client for API", err); });
+        }
+        function listFiles() {
+            return gapi.client.drive.files.list({
+              'q': "'YOUR_FOLDER_ID' in parents",
+              'fields': "nextPageToken, files(id, name)"
+            }).then(function(response) {
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    let output = '<ul>';
+                    files.forEach(file => {
+                        output += `<li><a href="https://drive.google.com/file/d/${file.id}/view" target="_blank">${file.name}</a></li>`;
+                    });
+                    output += '</ul>';
+                    document.getElementById("content").innerHTML = output;
+                } else {
+                    document.getElementById("content").innerHTML = 'No files found.';
+                }
+            }, function(err) { console.error("Execute error", err); });
+        }
+        gapi.load("client:auth2", function() {
+            gapi.auth2.init({client_id: "987005186375-e1hrqsbvnqb042s3pceeb2r9vpfi02a5.apps.googleusercontent.com"});
+        });
+    </script>
+</head>
+<body>
+    <button onclick="authenticate().then(loadClient)">Authorize and Load</button>
+    <button onclick="listFiles()">List Files</button>
+    <div id="content"></div>
+</body>
+</html>
